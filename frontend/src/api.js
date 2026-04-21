@@ -2,6 +2,11 @@ import { supabase } from './supabase';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
+async function uid() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id;
+}
+
 let _tokenCache = null;
 async function tokenList() {
   if (_tokenCache) return _tokenCache;
@@ -45,9 +50,16 @@ export async function getWallets() {
 }
 
 export async function addWallet(address, label) {
+  const user_id = await uid();
   const { data, error } = await supabase
-    .from('wallets').insert({ address, label: label || null, virtual_sol: 1, active: true })
+    .from('wallets').insert({ address, label: label || null, virtual_sol: 1, active: true, user_id })
     .select().single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateWalletSol(id, virtual_sol) {
+  const { data, error } = await supabase.from('wallets').update({ virtual_sol }).eq('id', id).select().single();
   if (error) throw new Error(error.message);
   return data;
 }
@@ -76,8 +88,9 @@ export async function addTrade({ wallet_id, token_in_mint, token_in_amount, toke
   if (solSpent > 0 && w) {
     await supabase.from('wallets').update({ virtual_sol: Math.max(0, w.virtual_sol - solSpent) }).eq('id', wallet_id);
   }
+  const user_id = await uid();
   const { data, error } = await supabase.from('trades').insert({
-    wallet_id: Number(wallet_id), source: 'manual', status: 'open',
+    wallet_id: Number(wallet_id), source: 'manual', status: 'open', user_id,
     token_in_mint, token_in_symbol: inInfo.symbol, token_in_amount: parseFloat(token_in_amount),
     token_out_mint, token_out_symbol: outInfo.symbol, token_out_amount: parseFloat(token_out_amount),
     entry_price_usd: prices[token_out_mint] || 0, sol_spent: solSpent
