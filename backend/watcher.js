@@ -48,8 +48,8 @@ async function poll() {
 
 function start() {
   console.log('Watcher started — polling every 30s');
-  poll();
-  setInterval(poll, POLL_MS);
+  poll().catch(e => console.error('poll error:', e.message));
+  setInterval(() => poll().catch(e => console.error('poll error:', e.message)), POLL_MS);
 }
 
 module.exports = { start };
