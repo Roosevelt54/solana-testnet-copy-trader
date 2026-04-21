@@ -2,8 +2,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SOLANA_RPC = 'https://api.mainnet-beta.solana.com'
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
-const JUPITER_PROGRAM = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4'
-const RAYDIUM_PROGRAM = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -41,7 +39,6 @@ function parseSwap(tx: any, walletAddress: string) {
   if (!tx || tx.meta?.err) return null
   const accounts: string[] = (tx.transaction?.message?.accountKeys || [])
     .map((k: any) => typeof k === 'string' ? k : k.pubkey)
-  if (!accounts.includes(JUPITER_PROGRAM) && !accounts.includes(RAYDIUM_PROGRAM)) return null
 
   const walletIdx = accounts.indexOf(walletAddress)
   if (walletIdx === -1) return null
